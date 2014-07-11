@@ -16,11 +16,11 @@ populatePermissions = function () {
         Permissions = models.Permissions;
 
     _.each(fixtures.permissions, function (permission) {
-        ops.push(function () {return Permission.add(permission, {user: 1}); });
+        ops.push(function () { return Permission.add(permission); });
     });
 
     _.each(fixtures.permissions003, function (permission) {
-        ops.push(function () {return Permission.add(permission, {user: 1}); });
+        ops.push(function () { return Permission.add(permission); });
     });
 
     //grant permissions to roles
@@ -98,7 +98,7 @@ updatePermissions = function () {
         Permissions = models.Permissions;
 
     _.each(fixtures.permissions003, function (permission) {
-        ops.push(function () {return Permission.add(permission, {user: 1}); });
+        ops.push(function () { return Permission.add(permission); });
     });
 
     relations.push(function () {
