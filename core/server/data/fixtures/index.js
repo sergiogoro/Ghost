@@ -1,4 +1,12 @@
-var sequence    = require('when/sequence'),
+// # Fixtures
+// This module handles populating or updating fixtures.
+//
+// Currently fixtures only change between data version 002 and 003, therefore the update logic is hard coded
+// rather than abstracted into a migration system. The upgrade function checks that its changes are safe before
+// making them.
+
+var when        = require('when'),
+    sequence    = require('when/sequence'),
     _           = require('lodash'),
     utils       = require('../../utils'),
     models      = require('../../models'),
@@ -8,9 +16,16 @@ var sequence    = require('when/sequence'),
     populate,
     update,
     to003,
-    fetchAdmin;
+    fetchAdmin,
+    convertAdminToOwner,
+    createOwner;
 
 
+/**
+ * Fetch Admin
+ * Find the user with the admin role, who can be upgraded to an owner.
+ * @returns {Promise|*}
+ */
 fetchAdmin = function () {
     return models.User.forge().fetch({
         withRelated: [{
@@ -21,14 +36,47 @@ fetchAdmin = function () {
     });
 };
 
+/**
+ * Convert admin to Owner
+ * Changes an admin user to have the owner role
+ * @returns {Promise|*}
+ */
+convertAdminToOwner = function () {
+    var adminUser;
+
+    return fetchAdmin().then(function (user) {
+        adminUser = user;
+        return models.Role.findOne({name: 'Owner'});
+    }).then(function (ownerRole) {
+        if (adminUser) {
+            return adminUser.roles().updatePivot({role_id: ownerRole.id});
+        }
+    });
+};
+
+/**
+ * Create Owner
+ * Creates the user fixture and gives it the owner role
+ * @returns {Promise|*}
+ */
+createOwner = function () {
+    var user = fixtures.users[0];
+
+    return models.Role.findOne({name: 'Owner'}).then(function (ownerRole) {
+        user.role = ownerRole.id;
+        user.password = utils.uid(50);
+
+        return models.User.add(user);
+    });
+};
+
 populate = function () {
     var ops = [],
         relations = [],
         Post = models.Post,
         Tag = models.Tag,
         Role = models.Role,
-        Client = models.Client,
-        User = models.User;
+        Client = models.Client;
 
     _.each(fixtures.posts, function (post) {
         ops.push(function () { return Post.add(post); });
@@ -60,45 +108,48 @@ populate = function () {
     }).then(function () {
         return permissions.populate();
     }).then(function () {
-        return Role.findOne({name: 'Owner'});
-    }).then(function (ownerRole) {
-        var user = fixtures.users[0];
-        user.role = ownerRole.id;
-        user.password = utils.uid(50);
-
-        return User.add(user, {user: 1});
+       return createOwner();
     });
 };
 
-// ### Update fixtures to 003
-// Need to add client & owner role, then update permissions to 003 as well
+/**
+ * ### Update fixtures to 003
+ * Need to add client & owner role, then update permissions to 003 as well
+ * By doing this in a way that checks before adding, we can ensure that it's possible to force a migration safely.
+ *
+ * Note: At the moment this is pretty adhoc & untestable, in future it would be better to have a config based system.
+ * @returns {Promise|*}
+ */
 to003 = function () {
     var ops = [],
-        adminUser,
+        upgradeOp,
         Role = models.Role,
         Client = models.Client;
 
-    // Add the new client fixture
-    _.each(fixtures.client, function (client) {
-        ops.push(function () { return Client.add(client); });
+    // Add the client fixture if missing
+    upgradeOp = Client.findOne({secret: fixtures.client[0].secret}).then(function (client) {
+        if (!client) {
+            _.each(fixtures.client, function (client) {
+                return Client.add(client);
+            });
+        }
     });
+    ops.push(upgradeOp);
 
-    // Add the missing owner role
-    _.each(fixtures.roles.slice(3), function (role) {
-        ops.push(function () { return Role.add(role); });
+    // Add the owner role if missing
+    upgradeOp = Role.findOne({name: fixtures.roles[3].name}).then(function (owner) {
+        if (!owner) {
+            _.each(fixtures.roles.slice(3), function (role) {
+                return Role.add(role);
+            });
+        }
     });
+    ops.push(upgradeOp);
 
-    return sequence(ops).then(function () {
+    return when.all(ops).then(function () {
         return permissions.to003();
     }).then(function () {
-        return fetchAdmin();
-    }).then(function (user) {
-        adminUser = user;
-        return Role.findOne({name: 'Owner'});
-    }).then(function (ownerRole) {
-        if (adminUser) {
-            return adminUser.roles().updatePivot({role_id: ownerRole.id});
-        }
+        return convertAdminToOwner();
     });
 };
 

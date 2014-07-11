@@ -1,94 +1,87 @@
 {
-    "permissions": [
+    "post": [
+
         {
             "name": "Edit posts",
-            "action_type": "edit",
-            "object_type": "post"
+            "action_type": "edit"
         },
         {
             "name": "Remove posts",
-            "action_type": "remove",
-            "object_type": "post"
+            "action_type": "remove"
         },
         {
             "name": "Create posts",
-            "action_type": "create",
-            "object_type": "post"
-        },
+            "action_type": "create"
+        }
+    ],
+    "slug": [
         {
             "name": "Generate post slug",
-            "action_type": "generate",
-            "object_type": "slug"
+            "action_type": "generate"
         },
         {
             "name": "Generate tag slug",
-            "action_type": "generate",
-            "object_type": "slug"
-        },
+            "action_type": "generate"
+        }
+    ],
+    "db": [
         {
             "name": "Export database",
-            "action_type": "exportContent",
-            "object_type": "db"
+            "action_type": "exportContent"
         },
         {
             "name": "Import database",
-            "action_type": "importContent",
-            "object_type": "db"
+            "action_type": "importContent"
         },
         {
             "name": "Delete all content",
-            "action_type": "deleteAllContent",
-            "object_type": "db"
-        },
+            "action_type": "deleteAllContent"
+        }
+    ],
+    "user": [
         {
             "name": "Browse users",
-            "action_type": "browse",
-            "object_type": "user"
+            "action_type": "browse"
         },
         {
             "name": "Read users",
-            "action_type": "read",
-            "object_type": "user"
+            "action_type": "read"
         },
         {
             "name": "Edit users",
-            "action_type": "edit",
-            "object_type": "user"
+            "action_type": "edit"
         },
         {
             "name": "Add users",
-            "action_type": "add",
-            "object_type": "user"
+            "action_type": "add"
         },
         {
             "name": "Remove users",
-            "action_type": "remove",
-            "object_type": "user"
-        },
+            "action_type": "remove"
+        }
+    ],
+    "setting": [
         {
             "name": "Browse settings",
-            "action_type": "browse",
-            "object_type": "setting"
+            "action_type": "browse"
         },
         {
             "name": "Read settings",
-            "action_type": "read",
-            "object_type": "setting"
+            "action_type": "read"
         },
         {
             "name": "Edit settings",
-            "action_type": "edit",
-            "object_type": "setting"
-        },
+            "action_type": "edit"
+        }
+    ],
+    "theme": [
         {
             "name": "Browse themes",
-            "action_type": "browse",
-            "object_type": "theme"
+            "action_type": "browse"
         },
         {
             "name": "Edit themes",
-            "action_type": "edit",
-            "object_type": "theme"
+            "action_type": "edit"
         }
     ]
 }

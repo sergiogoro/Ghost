@@ -1,3 +1,5 @@
+// # Permissions Fixtures
+// Sets up the permissions, and the default permissions_roles relationships
 var when        = require('when'),
     sequence    = require('when/sequence'),
     _           = require('lodash'),
@@ -15,8 +17,13 @@ populate = function () {
         Permission = models.Permission,
         Permissions = models.Permissions;
 
-    _.each(fixtures.permissions, function (permission) {
-        ops.push(function () { return Permission.add(permission); });
+    _.each(fixtures, function (permissions, object_type) {
+        _.each(permissions, function (permission) {
+            ops.push(function () {
+                permission.object_type = object_type;
+                return Permission.add(permission);
+            });
+        });
     });
 
     //grant permissions to roles
@@ -93,31 +100,31 @@ to003 = function () {
         relations = [],
         Role = models.Role,
         Permission = models.Permission,
-        Permissions = models.Permissions,
-        // Permissions that didn't exist before 003
-        newPermissions = fixtures.permissions.slice(3);
+        Permissions = models.Permissions;
 
-    _.each(newPermissions, function (permission) {
-        ops.push(function () { return Permission.add(permission); });
+
+    _.each(fixtures, function (permissions, object_type) {
+        // Post permissions were already present, don't re-add these
+        if (object_type !== 'post') {
+            _.each(permissions, function (permission) {
+                ops.push(function () {
+                    permission.object_type = object_type;
+                    return Permission.add(permission);
+                });
+            });
+        }
     });
 
     relations.push(function () {
         var relationOps = [],
             relationOp;
 
+        // ### Administrator
         // admin gets all new permissions
+
         relationOp = Role.forge({name: 'Administrator'}).fetch({withRelated: ['permissions']}).then(function (role) {
-            return Permissions.forge().fetch().then(function (perms) {
-                var admin_perm = _.map(perms.toJSON(), function (perm) {
-                    var result  = fixtures.permissions.filter(function (object) {
-                        return object.object_type === perm.object_type && object.action_type === perm.action_type;
-                    });
-                    if (!_.isEmpty(result)) {
-                        return perm.id;
-                    }
-                    return null;
-                });
-                return role.permissions().attach(_.compact(admin_perm));
+            return Permissions.forge().fetch({withRelated: ['roles']}).then(function (permissions) {
+                return role.permissions().attach(_.compact(permissions));
             });
         });
         relationOps.push(relationOp);
