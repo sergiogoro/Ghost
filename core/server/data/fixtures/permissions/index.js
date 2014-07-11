@@ -5,10 +5,10 @@ var when        = require('when'),
     models      = require('../../../models'),
     fixtures    = require('./permissions'),
 
-    populatePermissions,
-    updatePermissions;
+    populate,
+    to003;
 
-populatePermissions = function () {
+populate = function () {
     var ops = [],
         relations = [],
         Role = models.Role,
@@ -16,10 +16,6 @@ populatePermissions = function () {
         Permissions = models.Permissions;
 
     _.each(fixtures.permissions, function (permission) {
-        ops.push(function () { return Permission.add(permission); });
-    });
-
-    _.each(fixtures.permissions003, function (permission) {
         ops.push(function () { return Permission.add(permission); });
     });
 
@@ -90,14 +86,18 @@ populatePermissions = function () {
     });
 };
 
-updatePermissions = function () {
+// ### Update permissions to 003
+// Need to rename old permissions, and then add all of the missing oness
+to003 = function () {
     var ops = [],
         relations = [],
         Role = models.Role,
         Permission = models.Permission,
-        Permissions = models.Permissions;
+        Permissions = models.Permissions,
+        // Permissions that didn't exist before 003
+        newPermissions = fixtures.permissions.slice(3);
 
-    _.each(fixtures.permissions003, function (permission) {
+    _.each(newPermissions, function (permission) {
         ops.push(function () { return Permission.add(permission); });
     });
 
@@ -109,7 +109,7 @@ updatePermissions = function () {
         relationOp = Role.forge({name: 'Administrator'}).fetch({withRelated: ['permissions']}).then(function (role) {
             return Permissions.forge().fetch().then(function (perms) {
                 var admin_perm = _.map(perms.toJSON(), function (perm) {
-                    var result  = fixtures.permissions003.filter(function (object) {
+                    var result  = fixtures.permissions.filter(function (object) {
                         return object.object_type === perm.object_type && object.action_type === perm.action_type;
                     });
                     if (!_.isEmpty(result)) {
@@ -174,6 +174,6 @@ updatePermissions = function () {
 };
 
 module.exports = {
-    populatePermissions: populatePermissions,
-    updatePermissions: updatePermissions
+    populate: populate,
+    to003: to003
 };

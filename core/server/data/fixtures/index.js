@@ -5,21 +5,23 @@ var sequence    = require('when/sequence'),
     fixtures    = require('./fixtures'),
     permissions = require('./permissions'),
 
-    populateFixtures,
-    updateFixtures;
+    populate,
+    update,
+    to003,
+    fetchAdmin;
 
 
-function fetchAdmin() {
-    return User.forge().fetch({
+fetchAdmin = function () {
+    return models.User.forge().fetch({
         withRelated: [{
             'roles': function (qb) {
                 qb.where('name', 'Administrator');
             }
         }]
     });
-}
+};
 
-populateFixtures = function () {
+populate = function () {
     var ops = [],
         relations = [],
         Post = models.Post,
@@ -40,11 +42,7 @@ populateFixtures = function () {
         ops.push(function () { return Role.add(role); });
     });
 
-    _.each(fixtures.roles003, function (role) {
-        ops.push(function () { return Role.add(role); });
-    });
-
-    _.each(fixtures.client003, function (client) {
+    _.each(fixtures.client, function (client) {
         ops.push(function () { return Client.add(client); });
     });
 
@@ -60,7 +58,7 @@ populateFixtures = function () {
     return sequence(ops).then(function () {
         return sequence(relations);
     }).then(function () {
-        return permissions.populatePermissions();
+        return permissions.populate();
     }).then(function () {
         return Role.findOne({name: 'Owner'});
     }).then(function (ownerRole) {
@@ -72,24 +70,26 @@ populateFixtures = function () {
     });
 };
 
-updateFixtures = function () {
+// ### Update fixtures to 003
+// Need to add client & owner role, then update permissions to 003 as well
+to003 = function () {
     var ops = [],
         adminUser,
         Role = models.Role,
-        Client = models.Client,
-        User = models.User;
+        Client = models.Client;
 
-    _.each(fixtures.client003, function (client) {
+    // Add the new client fixture
+    _.each(fixtures.client, function (client) {
         ops.push(function () { return Client.add(client); });
     });
 
-    _.each(fixtures.roles003, function (role) {
+    // Add the missing owner role
+    _.each(fixtures.roles.slice(3), function (role) {
         ops.push(function () { return Role.add(role); });
     });
 
-
     return sequence(ops).then(function () {
-        return permissions.updatePermissions();
+        return permissions.to003();
     }).then(function () {
         return fetchAdmin();
     }).then(function (user) {
@@ -102,7 +102,13 @@ updateFixtures = function () {
     });
 };
 
+update = function (fromVersion, toVersion) {
+    if (fromVersion < '003' && toVersion >= '003') {
+        return to003();
+    }
+};
+
 module.exports = {
-    populateFixtures: populateFixtures,
-    updateFixtures: updateFixtures
+    populate: populate,
+    update: update
 };

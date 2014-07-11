@@ -44,21 +44,18 @@
         {
             "name":             "Author",
             "description":      "Authors"
+        },
+        {
+            "name":             "Owner",
+            "description":      "Blog Owner"
         }
     ],
 
-    "client003": [
+    "client": [
         {
             "name":             "Ghost Admin",
             "slug":             "ghost-admin",
             "secret":           "not_available"
-        }
-    ],
-
-    "roles003": [
-        {
-            "name":             "Owner",
-            "description":      "Blog Owner"
         }
     ]
 }

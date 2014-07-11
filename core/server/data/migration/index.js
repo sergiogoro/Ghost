@@ -101,7 +101,7 @@ init = function () {
             // 2. The database exists but is out of date
             // Migrate to latest version
             logInfo('Database upgrade required from version ' + databaseVersion + ' to ' +  defaultVersion);
-            return self.migrateUp().then(function () {
+            return self.migrateUp(databaseVersion, defaultVersion).then(function () {
                 // Finally update the databases current version
                 return versioning.setDatabaseVersion();
             });
@@ -153,7 +153,7 @@ migrateUpFreshDb = function () {
     return sequence(tables).then(function () {
         // Load the fixtures
         logInfo('Populating fixtures');
-        return fixtures.populateFixtures();
+        return fixtures.populate();
     }).then(function () {
         // Initialise the default settings
         logInfo('Populating default settings');
@@ -193,7 +193,7 @@ function backupDatabase() {
 }
 
 // Migrate from a specific version to the latest
-migrateUp = function () {
+migrateUp = function (fromVersion, toVersion) {
     var deleteCommands,
         addCommands,
         oldTables,
@@ -258,7 +258,8 @@ migrateUp = function () {
         return;
     }).then(function () {
         logInfo('Updating fixtures');
-        return fixtures.updateFixtures();
+
+        return fixtures.update(fromVersion, toVersion);
     }).then(function () {
         // Initialise the default settings
         logInfo('Populating default settings');

@@ -14,10 +14,7 @@
             "name": "Create posts",
             "action_type": "create",
             "object_type": "post"
-        }
-    ],
-
-    "permissions003": [
+        },
         {
             "name": "Generate post slug",
             "action_type": "generate",
