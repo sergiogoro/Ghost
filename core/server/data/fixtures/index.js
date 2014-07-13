@@ -108,7 +108,7 @@ populate = function () {
     }).then(function () {
         return permissions.populate();
     }).then(function () {
-       return createOwner();
+        return createOwner();
     });
 };
 
